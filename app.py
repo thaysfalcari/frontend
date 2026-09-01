@@ -49,10 +49,6 @@ INDUSTRY_ICON = ":material/factory:"
 APPLICATION_ICON = ":material/tune:"
 NATURE_ICON = ":material/science:"
 
-INDUSTRY_EXAMPLES = ", ".join(list(INDUSTRY_TAXONOMY.keys())[:3])
-APPLICATION_EXAMPLES = ", ".join(sorted({a for apps in INDUSTRY_TAXONOMY.values() for a in apps})[:3])
-NATURE_EXAMPLES = ", ".join(NATURE_OPTIONS[:3])
-
 
 # Landing headline -- one is picked at random per session (re-rolls on
 # "New workflow"). Professional but with some energy.
@@ -123,9 +119,9 @@ api_url = DEFAULT_API_URL.rstrip("/")
 # triggers. `query` is None until the first search -> that gates the whole
 # results block and the landing-vs-compact layout switch.
 st.session_state.setdefault("query", None)
-st.session_state.setdefault("industry", "")
-st.session_state.setdefault("application", "")
-st.session_state.setdefault("nature", "")
+st.session_state.setdefault("industry", "(Any)")
+st.session_state.setdefault("application", "(Any)")
+st.session_state.setdefault("nature", "(Any)")
 st.session_state.setdefault("categories", {})
 st.session_state.setdefault("focus_tool", None)  # catalogue_id of the node clicked in Section 3
 st.session_state.setdefault("headline", random.choice(HEADLINES))
@@ -231,16 +227,20 @@ def run_query_stream(query: str, categories: dict, status_slot):
 
 
 def _pop_label(field_name: str, value: str) -> str:
-    return value.strip() if value and value.strip() else field_name
+    """Popover label: the picked value, or the field name when unset -- so
+    active filters are visible on the closed bar."""
+    return field_name if value == "(Any)" else value
 
 
 def _current_categories() -> dict:
+    """The three picker values as structured fields -- "(Any)" dropped. Only
+    ever folded into the query text and shown as chips."""
     picks = {
         "industry": st.session_state.industry,
         "application": st.session_state.application,
         "nature_of_project": st.session_state.nature,
     }
-    return {k: v.strip() for k, v in picks.items() if v and v.strip()}
+    return {k: v for k, v in picks.items() if v != "(Any)"}
 
 
 
@@ -286,24 +286,31 @@ def render_search_bar(mode: str):
                 use_container_width=True,
                 help=_pop_label("Industry", st.session_state.industry),
             ):
-                st.text_input(
+                st.selectbox(
                     "Industry",
+                    options=["(Any)"] + list(INDUSTRY_TAXONOMY.keys()),
                     key="industry",
-                    placeholder=f"e.g. {INDUSTRY_EXAMPLES}…",
                 )
 
         with btn_cols[1]:
+            # Application options cascade from the picked Industry; "(Any)"
+            # -> the de-duplicated union across all industries.
+            if st.session_state.industry == "(Any)":
+                application_options = ["(Any)"] + sorted(
+                    {app for apps in INDUSTRY_TAXONOMY.values() for app in apps}
+                )
+            else:
+                application_options = ["(Any)"] + INDUSTRY_TAXONOMY[st.session_state.industry]
+            # Drop a stale Application pick before the selectbox renders.
+            if st.session_state.application not in application_options:
+                st.session_state.application = "(Any)"
             with st.popover(
                 "",
                 icon=APPLICATION_ICON,
                 use_container_width=True,
                 help=_pop_label("Application", st.session_state.application),
             ):
-                st.text_input(
-                    "Application",
-                    key="application",
-                    placeholder=f"e.g. {APPLICATION_EXAMPLES}…",
-                )
+                st.selectbox("Application", options=application_options, key="application")
 
         with btn_cols[2]:
             with st.popover(
@@ -312,12 +319,11 @@ def render_search_bar(mode: str):
                 use_container_width=True,
                 help=_pop_label("Nature of project", st.session_state.nature),
             ):
-                st.text_input(
+                st.selectbox(
                     "Nature of project",
+                    options=["(Any)"] + list(NATURE_OPTIONS),
                     key="nature",
-                    placeholder=f"e.g. {NATURE_EXAMPLES}…",
                 )
-
 
         status_slot = btn_cols[3].empty()
 
