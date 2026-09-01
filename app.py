@@ -189,7 +189,7 @@ def run_query_stream(query: str, categories: dict, status_slot):
                 if chunk["stage"] == "answer_chunk":
                     for word in re.finditer(r"\S+\s*", chunk["text"]):
                         yield word.group()
-                        time.sleep(0.02)   # ~50 words/sec — tune to taste
+                        time.sleep(0.05)   # ~50 words/sec — tune to taste
                 elif chunk["stage"] == "answer_done":
                     return
 
