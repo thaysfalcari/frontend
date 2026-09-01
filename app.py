@@ -4,6 +4,8 @@ import random
 from datetime import datetime, timezone
 from pathlib import Path
 
+import re
+import time
 import requests
 import streamlit as st  # Streamlit for the whole UI
 import streamlit.components.v1 as components  # raw HTML/JS embeds (the "thinking" cue) + the workflow component
@@ -195,26 +197,30 @@ def run_query_stream(query: str, categories: dict, status_slot):
         def _answer_tokens():
             for chunk in chunks:
                 if chunk["stage"] == "answer_chunk":
-                    yield chunk["text"]
+                    for word in re.finditer(r"\S+\s*", chunk["text"]):
+                        yield word.group()
+                        time.sleep(0.02)   # ~50 words/sec — tune to taste
                 elif chunk["stage"] == "answer_done":
-                    return  # tools + workflow still unread on `chunks` -- read next
+                    return
 
         status_slot.empty()  # stop the shimmer now that real content is arriving
         description = st.write_stream(_answer_tokens())
 
         tools: list = []
         workflow: dict = {"nodes": [], "edges": []}
-        for chunk in chunks:
-            if chunk["stage"] == "tools":
-                tools = chunk["tools"]
-                if chunk.get("error"):
-                    st.caption(chunk["error"])
-            elif chunk["stage"] == "workflow":
-                workflow = chunk.get("workflow") or {"nodes": [], "edges": []}
-                if chunk.get("error"):
-                    st.caption(chunk["error"])
+        with st.spinner("Building tool suggestions and workflow diagram…"):
+            for chunk in chunks:
+                if chunk["stage"] == "tools":
+                    tools = chunk["tools"]
+                    if chunk.get("error"):
+                        st.caption(chunk["error"])
+                elif chunk["stage"] == "workflow":
+                    workflow = chunk.get("workflow") or {"nodes": [], "edges": []}
+                    if chunk.get("error"):
+                        st.caption(chunk["error"])
 
         return description, tools, workflow
+
 
     except requests.RequestException as exc:
         status_slot.empty()
