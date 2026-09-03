@@ -3,89 +3,153 @@
   under sidebar -> Read Me (component: components/deck/).
 
   HOW SLIDES WORK
-  - Separate every slide with a line of three dashes:  ---
-  - #### text        eyebrow / kicker (small caps line above the title)
-  - ## text          slide title  (use *asterisks* for the accent colour, e.g. testware*.dev*)
-  - ### text         a supporting sub-line
-  - - item           bullet  (**bold** and [links](https://…) work)
-  - > text           a quote / pull-out
-  - ![Caption](placeholder-a.svg)   an image. Drop real files in components/deck/
-                                    and reference them by name, or paste a full https:// URL.
-  - To force a layout, start the slide with an HTML comment whose text is
-    "layout: NAME", where NAME is one of: title, section, content, media,
-    split, quote. Otherwise the layout is inferred (slide 1 = title,
-    heading-only = section, has an image = media, has a quote = quote,
-    else content). See the slides below for live examples.
+  - Separate every slide with a line of three dashes.
+  - #### text   kicker (small caps line above the title)
+  - ## text     slide title  (use *asterisks* for the accent colour, e.g. testware*.dev*)
+  - ### text    a supporting sub-line
+  - - item      bullet  (**bold** and [links](https://…) work)
+  - > text      a quote / pull-out
+  - ![Caption](placeholder-a.svg)   an image; files live in components/deck/
+  - Force a layout with an HTML comment "layout: NAME" as the slide's first
+    line. NAME is one of: title, section, content, media, split, quote.
 
-  Everything below is placeholder copy in the app's one colour theme — edit freely.
+  IMAGE PLACEHOLDERS
+  - Every ![...](placeholder-*.svg) is a labelled grey box saying what
+    pictogram / diagram / screenshot belongs there. Replace the .svg file in
+    components/deck/ (keep the filename) or repoint the reference.
+
+  STATUS: draft of the 10-slide pitch. [NEEDS INPUT] / [VISUAL] markers flag
+  the spots left for manual follow-up.
 -->
 
-#### Demo Day · 2026
 ## testware*.dev*
-### One-stop webshop for digital twins — everything, everywhere, all at once.
+### One-stop webshop for digital-twin-based everything, everywhere, all at once.
 
-An AI catalogue that turns *"I need to model this"* into a concrete workflow: methods, tools, standards, budget, timeline.
+Digital twins are moving from R&D novelty to industrial necessity.
 
----
-
-<!-- layout: section -->
-
-#### Part one
-## Why digital twins, why now
+![Hero visual](placeholder-hero.svg)
 
 ---
+
+<!-- layout: media -->
 
 #### Why now · 01
-## Every vertical is going software-defined
+## Every industry is becoming software-defined
 
-- Electrification, automation, digitalisation — auto, aero, energy, infrastructure, manufacturing, life sciences
-- Vehicles, grids, batteries, robots, medical devices are now systems under electronic control
-- More sensors, more code, more data in the wild
+- Three shifts at once: electrification, automation, digitalisation
+- Across auto/aero, energy, infrastructure, manufacturing, agriculture, life sciences
+- Software-defined plants — vehicles, grids, batteries, robots, medical devices — mean more code, more data, more complexity
+
+![Pictogram grid — the verticals](placeholder-verticals.svg)
 
 ---
+
+<!-- layout: media -->
 
 #### Why now · 02
 ## Ship faster — and prove it's safe
 
-![How the pieces connect](placeholder-a.svg)
-
-- Tightening regulation: ISO 26262 · DO-178C · IEC 62304
-- Left-shifted, test-driven development against a virtual plant
+- Shorter release cycles collide with tighter regulation: ISO 26262 · DO-178C · IEC 62304
+- The response: left-shifted, test-driven development
 - **€50B** EU digital-twin market by 2030
 
+Source: [NEEDS INPUT — citation URL for the "€50B EU digital-twin market by 2030" figure]
+
+![Market-size diagram](placeholder-market.svg)
+
 ---
 
-<!-- layout: split -->
+<!-- layout: media -->
 
+#### How · models
 ## Right fidelity for the right problem
 
-- Multi-physics & multi-scale
-- Computational mechanics, systems biology, controls
-- Machine learning, reduced-order, topological
-- Real-time targets: CAN bus · ARINC · FlexRay · FPGAs
+- Multiscale & multiphysics, computational X-mechanics
+- Systems biology, controls & systems engineering
+- ML, reduced-order modelling, topological (CAD, point clouds)
+
+![VISUAL — modelling-fidelity spectrum diagram](placeholder-fidelity.svg)
 
 ---
 
-<!-- layout: quote -->
+<!-- layout: media -->
 
-> The map from "what I need to model" to "how to build it" doesn't exist yet. We're drawing it.
+#### How · simulators & workflows
+## From models to real-time testing
 
-— testware.dev
+- Real-time targets, sensors, power electronics, FPGAs
+- Industrial protocols: CAN · ARINC · FlexRay
+- Enables X-in-the-Loop, rapid prototyping, predictive maintenance, virtual commissioning, restbus simulation
+
+![VISUAL — X-in-the-Loop test setup](placeholder-xil.svg)
+
+---
+
+<!-- layout: media -->
+
+#### What · illustrative outputs
+## Three example workflows our tool generates
+
+Illustrative outputs from our own LLM+RAG pipeline — saved generations, not client projects.
+
+- ICME-based digital twin for material-failure prediction
+- Building digital twin from an IFC model
+- Patient digital twin
+
+![VISUAL — three generated flowcharts; swap in real tool output](placeholder-cases.svg)
+
+---
+
+<!-- layout: media -->
+
+#### The problem
+## The on-ramp is missing
+
+- Digital-twin know-how is niche — few people can start from scratch
+- Tools are proprietary, expensive, rarely open-source
+- Real systems span verticals — materials, building, patient in one place — and integration is hard
+
+![Pictogram — the missing on-ramp](placeholder-gap.svg)
 
 ---
 
 <!-- layout: media -->
 
 #### The solution
-## An ontology for digital-twin work
+## A fast, accessible on-ramp
 
-![The catalogue graph](placeholder-b.svg)
+- A structured prompt — industry, application, nature of the project
+- LLM+RAG generates a workflow description, a flowchart, and tool suggestions from our curated database
+- Edit the flowchart, save it as your own workflow
 
-Tool type · application · provenance · fidelity — one queryable database. Today: a curated model catalogue with **AI search** → methods, tools, certification guidelines, estimated budget and timeline.
+![Screenshot — prompt and tags to workflow, flowchart, tools](placeholder-solution.svg)
 
 ---
 
-<!-- layout: section -->
+<!-- layout: media -->
 
-#### The ask
-## Tell us the digital twin you're trying to build
+#### Product · now & next
+## Working today — and where it goes
+
+- **Now:** prompt bar + category tags → enhanced prompt → generated workflow description, flowchart and suggested tools → edit and save; every save grows our workflow dataset
+- **Next:** individual tools connect as live, executable nodes inside a saved flowchart — e.g. an Airflow-based car simulation
+- **Next:** visualise, understand and eventually run full digital-twin workflows in the tool
+
+![Diagram — now to later, suggestion to executable node](placeholder-roadmap.svg)
+
+---
+
+<!-- layout: media -->
+
+#### Business model & ask
+## Grow now, monetise later
+
+- **Today:** growth over revenue — maximise users creating and saving workflows; build traffic and the dataset
+- **Later:** monthly subscription to understand, visualise and execute digital-twin workflows
+- **Later:** vendor lead-gen — tools plugged in as nodes become qualified leads — and the workflow dataset as an asset in its own right
+
+> We're looking for early users and honest feedback — and open to partnership and investment conversations.
+
+[NEEDS INPUT — confirm exact ask phrasing]
+
+![Pictogram — growth now, monetise later](placeholder-model.svg)

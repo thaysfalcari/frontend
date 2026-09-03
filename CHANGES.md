@@ -9,7 +9,7 @@ and `git log 9c2589a..feat/frontend-refresh` for the commits.
 | Area | Before | After |
 |---|---|---|
 | Theme | Black & white + Streamlit-red accent | Warm off-white / near-black "Perplexity-style", black accent (`.streamlit/config.toml` + `styles.css`) |
-| Layout | Numbered sections 1–4, sidebar with a "RAG API URL" text field | Sidebar is a nav rail ("New workflow" + disabled placeholders); backend URL is config, not a widget |
+| Layout | Numbered sections 1–4, sidebar with a "RAG API URL" text field | Sidebar is a three-area nav (Chat / Presentation / Examples) + area-specific controls; backend URL is config, not a widget |
 | Section order | 1 Description · 2 Tools · 3 Canvas · 4 Export | 1 Description · **2 Canvas** · 3 Tools · 4 Export |
 | Workflow canvas | Read-only; returns the clicked node | **Editable** (move / wire / delete); returns a clicked node **or** an edited graph |
 | Facets | Hardcoded dict in `app.py` (6 industries) | `facets.json` (15 industries, 8 use cases) |
@@ -27,6 +27,46 @@ and `git log 9c2589a..feat/frontend-refresh` for the commits.
   fetch finishes.
 - `_save_workflow(result)` — appends the on-screen result to
   `saved_workflows.json` (git-ignored, ephemeral).
+- **Three-area nav.** `st.session_state.area` ∈ `chat | presentation |
+  examples`, chosen by one `st.radio` at the top of the sidebar (`key=
+  "sb_area"`). Area-specific controls sit right under it: Chat → **New
+  workflow**; Examples → a compact `st.radio` (`key="sb_example_pick"`,
+  `_example_short()` labels) that keeps exactly one example loaded;
+  Presentation → nothing. The main pane dispatches on `area` — Presentation
+  and Examples fully replace it (`st.stop()`); Chat is the default
+  landing/results. `_render_workflow_result(allow_search, allow_save)` is the
+  shared output body: Chat passes both `True` (live query, save-as-example
+  shown), Examples passes both `False`. Leaving Examples for Chat clears the
+  loaded example so it doesn't bleed into the chat space.
+- `_load_examples()` / `_open_example()` — `examples/*.json` are curated,
+  committed, read-only seed workflows. `_open_example()` pre-seeds
+  `st.session_state.results` with a matching cache key so
+  `_render_workflow_result()` reuses it **with no backend call** (examples
+  work offline / with the RAG API down). Add an example by dropping a
+  `NN-name.json` file (shape: one `_save_workflow` payload — `{query,
+  categories, description, tools, workflow}`) in `examples/`; `NN-` sets the
+  order and `_example_short()` derives the sidebar label from the filename.
+- `_write_example()` / `_example_payload()` — the **"Save this workflow as a
+  pitch example"** expander under the workflow canvas. Writes the on-screen
+  result (query + categories + description + tools + graph incl. canvas edits)
+  to `examples/NN-<slug>.json` and clears the `_load_examples` cache so it
+  shows at once. Commit + push to keep it. The expander also prints the JSON
+  for copy/paste — on Streamlit Cloud (ephemeral disk) paste it into a new
+  repo file rather than relying on the disk write.
+- `build_enhanced_query(raw, categories)` — fills `_PROMPT_TEMPLATE`'s
+  `{query}` / `{context}` parameters and returns the finished instruction
+  prompt; **that return value, not the bare search-bar text, is what's
+  POSTed** as `query` (`rag/schemas.py` `QueryRequest`: 3–1000 chars, reused
+  for the retrieval embedding *and* every generation prompt). The template
+  is prewritten and fixed — the search-bar text and the three dropdown
+  categories are the only parts that vary, substituted in as parameters —
+  and carries 3 standing instructions (workflow description = two
+  paragraphs / `_DESC_WORDS` total; suggest up to `_MAX_TOOLS` tools,
+  catalogue-only; build the workflow by combining those same tools). Only
+  `{query}` is ever ellipsised, and only if the filled prompt would exceed
+  `_QUERY_MAX`. `_EXAMPLE_ENHANCED_QUERY` is a worked example (asserted
+  equal to the function's own output) — read it to see exactly what goes
+  over the wire.
 - Result caching — `run_query()` is only called when
   `(query, json.dumps(categories, sort_keys=True))` changes; otherwise the
   cached `description / tools / workflow` is reused. **Why:** the backend
@@ -62,11 +102,11 @@ Backend note (not in this PR): the RAG service already emits this exact
 graphs the levers are its prompt (`rag/prompts/workflow.py`, currently
 zero-shot) and a validation pass — no frontend change needed.
 
-## Read Me / demo-day deck (`components/deck/`)
+## Presentation area / demo-day deck (`components/deck/`)
 
-Sidebar → **Read Me** opens a full-page animated slide deck (`show_readme`
-flag in `app.py`; `deck_view` custom component). The deck renders
-**`presentation.md`** — no code needed to edit it:
+Sidebar → **Presentation** (one of the three areas — see "Three-area nav"
+above) shows a full-page animated slide deck (`deck_view` custom component).
+The deck renders **`presentation.md`** — no code needed to edit it:
 
 - Slides are separated by a line of `---`.
 - `####` eyebrow · `##` title (`*asterisks*` = accent colour) · `###` sub-line
